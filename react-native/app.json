@@ -1,0 +1,85 @@
+{
+  "expo": {
+    "name": "Trivia Night",
+    "slug": "trivia-night",
+    "version": "1.0.0",
+    "scheme": "trivianight",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0D1A"
+    },
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.redsitesoftware.trivianight",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "trivianight"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D0D1A"
+      },
+      "package": "com.redsitesoftware.trivianight",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "trivianight"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      ["expo-build-properties", {
+        "android": {
+          "kotlinVersion": "1.9.25"
+        }
+      }],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "enableGooglePay": false
+        }
+      ]
+    ],
+    "extra": {
+      "wsUrl": "",
+      "eas": {
+        "projectId": "8dbd695e-b804-4ab9-85f6-4daa8839b32f"
+      }
+    },
+    "owner": "zx10r06"
+  }
+}

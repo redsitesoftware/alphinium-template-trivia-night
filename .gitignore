@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.env
+.alphinium/
+data/
+.test-data/
+/web/
+test-results/
