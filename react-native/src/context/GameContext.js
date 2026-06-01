@@ -356,6 +356,10 @@ export function GameProvider({ children }) {
         dispatch({ type: 'PLAYERS_UPDATE', payload: msg.players });
         break;
 
+      case 'player_left':
+        dispatch({ type: 'PLAYERS_UPDATE', payload: msg.players });
+        break;
+
       // AI generation in progress — always show loading screen now (all games use AI)
       case 'ai_generating':
         dispatch({ type: 'AI_GENERATING', subject: msg.subject, difficulty: msg.difficulty, aiMode: msg.aiMode });

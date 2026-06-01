@@ -774,6 +774,7 @@ export default function LobbyScreen() {
         ) : (
           <View style={styles.waitingMsg}>
             <Text style={styles.waitingText}>⏳ Waiting for host to start the game…</Text>
+            <Text style={styles.playerCountText}>👥 {players.length} {players.length === 1 ? 'player' : 'players'} waiting</Text>
             {!audioEnabled && (
               <TouchableOpacity
                 style={styles.audioEnableBtn}
@@ -1207,6 +1208,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   waitingText: { color: colors.textSecondary, fontSize: typography.base },
+  playerCountText: { color: colors.accent, fontSize: typography.md, fontWeight: typography.semibold },
   audioEnableBtn: {
     backgroundColor: colors.primary,
     borderRadius: radius.lg,
