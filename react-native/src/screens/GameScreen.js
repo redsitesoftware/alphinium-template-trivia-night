@@ -16,9 +16,9 @@ import useVoiceAnswers from '../hooks/useVoiceAnswers';
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
 export default function GameScreen() {
-  const { state, submitAnswer, toggleMute, toggleMutePlayers } = useGame();
+  const { state, submitAnswer, toggleMute, toggleMutePlayers, toggleSoundEffects } = useGame();
   const { question, timerRemaining, timerMax, answered, selectedAnswer, answerResult, correctAnswer,
-          voiceMuted, isHost, mutePlayersOnStart, totalRounds, currentRound, voiceAnswers } = state;
+          voiceMuted, soundEffectsMuted, isHost, mutePlayersOnStart, totalRounds, currentRound, voiceAnswers } = state;
   const { aiComment: comment } = useGame();
 
   const isMultiRound = totalRounds > 1;
@@ -123,6 +123,9 @@ export default function GameScreen() {
               <Text style={styles.muteIcon}>{mutePlayersOnStart ? '🔇👥' : '🔊👥'}</Text>
             </TouchableOpacity>
           )}
+          <TouchableOpacity onPress={toggleSoundEffects} style={styles.muteBtn} activeOpacity={0.7}>
+            <Text style={styles.muteIcon}>{soundEffectsMuted ? '🔕' : '🔔'}</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={toggleMute} style={styles.muteBtn} activeOpacity={0.7}>
             <Text style={styles.muteIcon}>{voiceMuted ? '🔇' : '🔊'}</Text>
           </TouchableOpacity>

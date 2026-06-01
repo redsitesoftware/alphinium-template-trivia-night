@@ -33,6 +33,7 @@ const initialState = {
 
   // Per-device mute (persisted in localStorage, not sent to server)
   voiceMuted: false,
+  soundEffectsMuted: soundManager.isMuted(),
 
   // Host-controlled: mutes question audio on all non-host devices
   mutePlayersOnStart: false,
@@ -212,6 +213,9 @@ function reducer(state, action) {
 
     case 'MUTE_TOGGLED':
       return { ...state, voiceMuted: action.payload };
+
+    case 'SOUND_EFFECTS_TOGGLED':
+      return { ...state, soundEffectsMuted: action.payload };
 
     case 'MUTE_PLAYERS_UPDATED':
       return { ...state, mutePlayersOnStart: action.payload };
@@ -661,6 +665,16 @@ export function GameProvider({ children }) {
     dispatch({ type: 'MUTE_PLAYERS_UPDATED', payload: newMuted });
   }, [state.mutePlayersOnStart, send]);
 
+  const toggleSoundEffects = useCallback(() => {
+    const newMuted = !state.soundEffectsMuted;
+    if (newMuted) {
+      soundManager.mute();
+    } else {
+      soundManager.unmute();
+    }
+    dispatch({ type: 'SOUND_EFFECTS_TOGGLED', payload: newMuted });
+  }, [state.soundEffectsMuted]);
+
   const clearInsufficientCredits = useCallback(() => {
     dispatch({ type: 'CLEAR_INSUFFICIENT_CREDITS' });
   }, []);
@@ -678,7 +692,7 @@ export function GameProvider({ children }) {
   }, [send]);
 
   return (
-    <GameContext.Provider value={{ state, connect, send, disconnect, submitAnswer, startGame, aiComment, toggleMute, toggleMutePlayers, clearInsufficientCredits, setGameMode, useLifeline, walkAway }}>
+    <GameContext.Provider value={{ state, connect, send, disconnect, submitAnswer, startGame, aiComment, toggleMute, toggleMutePlayers, toggleSoundEffects, clearInsufficientCredits, setGameMode, useLifeline, walkAway }}>
       {children}
     </GameContext.Provider>
   );
