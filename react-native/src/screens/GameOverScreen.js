@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState, useContext } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList, Animated, ScrollView, Image,
 } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGame } from '../context/GameContext';
 import { useAgent } from '../hooks/useAgent';
@@ -40,6 +41,7 @@ export default function GameOverScreen() {
     leaderboard,
   });
 
+  const confettiRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const podiumAnims = [
     useRef(new Animated.Value(0)).current,
@@ -74,7 +76,11 @@ export default function GameOverScreen() {
       Animated.stagger(200, podiumAnims.map((a) =>
         Animated.spring(a, { toValue: 1, bounciness: 10, useNativeDriver: true })
       )),
-    ]).start();
+    ]).start(() => {
+      if (myRank === 0 && confettiRef.current) {
+        confettiRef.current.start();
+      }
+    });
   }, []);
 
   function handlePlayAgain() {
@@ -183,6 +189,16 @@ export default function GameOverScreen() {
           />
         </Animated.View>
       </ScrollView>
+      {myRank === 0 && (
+        <ConfettiCannon
+          ref={confettiRef}
+          count={200}
+          origin={{ x: -20, y: 0 }}
+          autoStart={false}
+          fadeOut
+          style={styles.confettiOverlay}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -316,4 +332,12 @@ const styles = StyleSheet.create({
   actionBtnText: { color: colors.white, fontSize: typography.md, fontWeight: typography.bold },
   actionBtnTextSecondary: { color: colors.primary },
   shareSheet: { marginTop: spacing.sm },
+  confettiOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
 });
