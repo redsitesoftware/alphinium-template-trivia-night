@@ -33,6 +33,8 @@ export default function GameScreen() {
   const timerAnim = useRef(new Animated.Value(1)).current;
   const feedbackAnim = useRef(new Animated.Value(0)).current;
   const commentAnim = useRef(new Animated.Value(0)).current;
+  const scoreFloatY = useRef(new Animated.Value(0)).current;
+  const scoreFloatOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!timerMax) return;
@@ -48,6 +50,20 @@ export default function GameScreen() {
       Animated.spring(feedbackAnim, { toValue: 1, useNativeDriver: true, bounciness: 8 }).start();
     } else {
       feedbackAnim.setValue(0);
+    }
+  }, [answerResult]);
+
+  useEffect(() => {
+    if (answerResult?.correct) {
+      scoreFloatY.setValue(0);
+      scoreFloatOpacity.setValue(1);
+      Animated.parallel([
+        Animated.timing(scoreFloatY, { toValue: -80, duration: 800, useNativeDriver: true }),
+        Animated.timing(scoreFloatOpacity, { toValue: 0, duration: 800, useNativeDriver: true }),
+      ]).start();
+    } else if (!answerResult) {
+      scoreFloatY.setValue(0);
+      scoreFloatOpacity.setValue(0);
     }
   }, [answerResult]);
 
@@ -159,6 +175,20 @@ export default function GameScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Floating score animation */}
+        {answerResult?.correct && (
+          <Animated.Text
+            testID="score-animation"
+            data-testid="score-animation"
+            style={[
+              styles.scoreFloat,
+              { transform: [{ translateY: scoreFloatY }], opacity: scoreFloatOpacity },
+            ]}
+          >
+            +{answerResult.points} pts
+          </Animated.Text>
+        )}
 
         {/* Voice answer mic button */}
         {voiceAnswers && !answered && Platform.OS === 'web' && (
@@ -397,5 +427,17 @@ const styles = StyleSheet.create({
     color: '#e67e22',
     fontStyle: 'normal',
     fontWeight: typography.semibold,
+  },
+
+  scoreFloat: {
+    position: 'absolute',
+    alignSelf: 'center',
+    fontSize: 28,
+    fontWeight: typography.bold,
+    color: '#00D4AA',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    pointerEvents: 'none',
   },
 });
