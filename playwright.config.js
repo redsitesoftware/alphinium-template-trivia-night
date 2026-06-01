@@ -21,6 +21,20 @@ module.exports = defineConfig({
       },
     },
     {
+      // Score animation E2E test (issue #30) — Chromium headless
+      name: 'score-animation',
+      testMatch: 'score-animation.spec.js',
+      use: {
+        baseURL: process.env.SITE_URL || 'https://trivia.user-pods.alphinium.io',
+        ignoreHTTPSErrors: true,
+        video: 'retain-on-failure',
+        screenshot: 'only-on-failure',
+        launchOptions: {
+          args: ['--disable-ipv6'],
+        },
+      },
+    },
+    {
       // Admin/setup scripts that need real Chrome to pass Google login
       name: 'admin-chrome',
       testMatch: 'setup-*.spec.js',
