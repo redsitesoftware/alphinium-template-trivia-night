@@ -35,6 +35,20 @@ module.exports = defineConfig({
       },
     },
     {
+      // Timer progress bar E2E test (issue #33) — Chromium headless
+      name: 'timer-progress-bar',
+      testMatch: 'timer-progress-bar.spec.js',
+      use: {
+        baseURL: process.env.SITE_URL || 'https://trivia.user-pods.alphinium.io',
+        ignoreHTTPSErrors: true,
+        video: 'retain-on-failure',
+        screenshot: 'only-on-failure',
+        launchOptions: {
+          args: ['--disable-ipv6'],
+        },
+      },
+    },
+    {
       // Admin/setup scripts that need real Chrome to pass Google login
       name: 'admin-chrome',
       testMatch: 'setup-*.spec.js',
