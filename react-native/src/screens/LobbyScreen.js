@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList, Switch, TextInput,
-  ScrollView, Share, Platform, Modal,
+  ScrollView, Share, Platform, Modal, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -773,6 +773,7 @@ export default function LobbyScreen() {
           </View>
         ) : (
           <View style={styles.waitingMsg}>
+            <ActivityIndicator size="large" color={colors.accent} style={styles.waitingSpinner} />
             <Text style={styles.waitingText}>⏳ Waiting for host to start the game…</Text>
             <Text style={styles.playerCountText}>👥 {players.length} {players.length === 1 ? 'player' : 'players'} waiting</Text>
             {!audioEnabled && (
@@ -1207,6 +1208,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     gap: spacing.md,
   },
+  waitingSpinner: { marginBottom: spacing.xs },
   waitingText: { color: colors.textSecondary, fontSize: typography.base },
   playerCountText: { color: colors.accent, fontSize: typography.md, fontWeight: typography.semibold },
   audioEnableBtn: {
