@@ -1599,8 +1599,15 @@ wss.on('connection', (ws) => {
     } else if (playerId && roomCode) {
       const room = getRoomByPlayer(playerId);
       if (room) {
-        const player = room.players.get(playerId);
-        if (player) player.ws = null;
+        if (room.state === 'lobby') {
+          // Remove the player from the room and notify remaining players
+          room.players.delete(playerId);
+          const playerList = [...room.players.values()].map(p => ({ id: p.id, name: p.name, score: p.score }));
+          broadcast(room, { type: 'player_left', players: playerList });
+        } else {
+          const player = room.players.get(playerId);
+          if (player) player.ws = null;
+        }
       }
     }
   });
