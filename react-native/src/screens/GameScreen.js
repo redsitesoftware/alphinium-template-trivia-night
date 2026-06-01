@@ -132,6 +132,8 @@ export default function GameScreen() {
         <View style={styles.timerContainer}>
           <View style={styles.timerTrack}>
             <Animated.View
+              testID="timer-bar"
+              data-testid="timer-bar"
               style={[
                 styles.timerBar,
                 {
