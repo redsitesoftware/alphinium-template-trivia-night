@@ -24,7 +24,7 @@ const PODIUM_HEIGHTS = [80, 110, 60];
 export default function GameOverScreen() {
   const { state, disconnect } = useGame();
   const { leaderboard, playerId, roomCode, subject, playerName: gamePlayerName } = state;
-  const { saveResult, stats } = useGameStats();
+  const { saveResult, saveHighScore, highScores } = useGameStats();
   const { user } = useContext(AuthContext) || {};
   const [resultFlags, setResultFlags] = useState(null);
 
@@ -69,6 +69,7 @@ export default function GameOverScreen() {
         totalPlayers: leaderboard.length,
         subject: subject || 'General Knowledge',
       }).then(setResultFlags).catch(() => {});
+      saveHighScore(displayName, myScore).catch(() => {});
     }
 
     Animated.sequence([
@@ -166,6 +167,22 @@ export default function GameOverScreen() {
               </View>
             ))}
           </View>
+
+          {/* High Scores */}
+          {highScores.length > 0 && (
+            <>
+              <Text style={styles.fullLbTitle}>🏆 High Scores</Text>
+              <View style={styles.fullLb}>
+                {highScores.map((entry, i) => (
+                  <View key={`hs-${i}`} style={styles.lbRow}>
+                    <Text style={styles.lbRank}>{MEDALS[i] || `${i + 1}`}</Text>
+                    <Text style={styles.lbName} numberOfLines={1}>{entry.name}</Text>
+                    <Text style={styles.lbScore}>{entry.score}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
 
           <View style={styles.actionRow}>
             <TouchableOpacity style={[styles.actionBtn, styles.actionBtnPrimary]} onPress={handlePlayAgain} activeOpacity={0.8}>
