@@ -14,8 +14,35 @@ const { test, expect, chromium } = require('@playwright/test');
 const path = require('path');
 
 const BASE_URL = (process.env.SITE_URL || 'https://trivia.user-pods.alphinium.io') + '?v=1.1.0';
+const WS_URL = (process.env.SITE_URL || 'https://trivia.user-pods.alphinium.io')
+  .replace(/^https?:\/\//, (m) => (m === 'https://' ? 'wss://' : 'ws://'));
 const SCREENSHOT_DIR = path.join(__dirname, 'screenshots');
 const AI_TIMEOUT = 200_000;
+
+/**
+ * Verifies the WebSocket server is reachable before attempting a full game flow.
+ * Returns an error message string if unreachable, or null if the connection succeeds.
+ */
+async function checkWebSocketConnectivity() {
+  return new Promise((resolve) => {
+    const WebSocket = require('ws');
+    const ws = new WebSocket(WS_URL, { rejectUnauthorized: false });
+    const timer = setTimeout(() => {
+      ws.terminate();
+      resolve(`WebSocket connection timed out after 10s (url: ${WS_URL})`);
+    }, 10_000);
+
+    ws.on('open', () => {
+      clearTimeout(timer);
+      ws.close();
+      resolve(null);
+    });
+    ws.on('error', (err) => {
+      clearTimeout(timer);
+      resolve(`WebSocket connection error: ${err.message} (url: ${WS_URL})`);
+    });
+  });
+}
 
 // "Dan Woods" triggers admin bypass — no credit check needed for solo game
 const HOST_NAME = 'Dan Woods';
@@ -79,6 +106,21 @@ test.describe('Score Animation — correct answer triggers +N pts overlay', () =
 
   test.afterAll(async () => {
     await browser?.close();
+  });
+
+  /**
+   * TC-SA0: WebSocket connectivity pre-check.
+   * Fails fast with a clear message when the game server's WebSocket is unreachable,
+   * which was the root cause of previous UAT failures.
+   */
+  test('TC-SA0: WebSocket server is reachable', async () => {
+    const err = await checkWebSocketConnectivity();
+    expect(
+      err,
+      `Game server WebSocket must be reachable for the score-animation test.\n${err || ''}\n` +
+        'Ensure the preview environment proxies WebSocket upgrade requests to the game server.',
+    ).toBeNull();
+    console.log(`  ✅ TC-SA0: WebSocket reachable at ${WS_URL}`);
   });
 
   /**
