@@ -3,11 +3,14 @@
  * Contains:
  *   - Dedication line
  *   - "Built with Alphinium.com" branding (placeholder for alphinium-ads)
+ *   - App version number
  */
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { colors, typography, spacing } from '../theme';
+
+const APP_VERSION = 'v1.0.0';
 
 export default function AppFooter({ style }) {
   return (
@@ -21,6 +24,7 @@ export default function AppFooter({ style }) {
           <Text style={styles.brandingLink}>Alphinium.com</Text>
         </Text>
       </TouchableOpacity>
+      <Text style={styles.version}>{APP_VERSION}</Text>
     </View>
   );
 }
@@ -45,5 +49,12 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: typography.semibold,
     textDecorationLine: 'underline',
+  },
+  version: {
+    fontSize: typography.xs,
+    color: colors.textMuted,
+    opacity: 0.6,
+    textAlign: 'center',
+    marginTop: 2,
   },
 });
