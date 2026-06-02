@@ -63,6 +63,7 @@ const initialState = {
   answered: false,
   selectedAnswer: null,
   answerResult: null, // { correct, points, streak, multiplier }
+  currentStreak: 0,  // persistent consecutive correct answer count (reset on wrong/timeout)
 
   // Leaderboard
   leaderboard: [],
@@ -152,7 +153,11 @@ function reducer(state, action) {
       return { ...state, answered: true, selectedAnswer: action.payload };
 
     case 'ANSWER_RESULT':
-      return { ...state, answerResult: action.payload };
+      return {
+        ...state,
+        answerResult: action.payload,
+        currentStreak: action.payload.correct ? (action.payload.streak ?? state.currentStreak + 1) : 0,
+      };
 
     case 'QUESTION_END':
       return {
@@ -160,6 +165,8 @@ function reducer(state, action) {
         phase: 'leaderboard',
         leaderboard: action.payload.leaderboard,
         correctAnswer: action.payload.correctAnswer,
+        // Time ran out without the player answering — treat as wrong, reset streak
+        currentStreak: state.answered ? state.currentStreak : 0,
       };
 
     case 'LEADERBOARD_UPDATE':

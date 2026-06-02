@@ -18,7 +18,8 @@ const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 export default function GameScreen() {
   const { state, submitAnswer, toggleMute, toggleMutePlayers, toggleSoundEffects } = useGame();
   const { question, timerRemaining, timerMax, answered, selectedAnswer, answerResult, correctAnswer,
-          voiceMuted, soundEffectsMuted, isHost, mutePlayersOnStart, totalRounds, currentRound, voiceAnswers } = state;
+          voiceMuted, soundEffectsMuted, isHost, mutePlayersOnStart, totalRounds, currentRound, voiceAnswers,
+          currentStreak } = state;
   const { aiComment: comment } = useGame();
 
   const isMultiRound = totalRounds > 1;
@@ -154,10 +155,14 @@ export default function GameScreen() {
           <Text style={styles.questionText}>{question.question}</Text>
         </View>
 
-        {/* Streak indicator */}
-        {answerResult?.multiplier > 1 && (
-          <View style={styles.streakBadge}>
-            <Text style={styles.streakText}>🔥 x{answerResult.multiplier} streak!</Text>
+        {/* Streak HUD — visible whenever streak >= 1 */}
+        {currentStreak >= 1 && (
+          <View
+            testID="streak-hud"
+            data-testid="streak-hud"
+            style={styles.streakHud}
+          >
+            <Text style={styles.streakHudText}>🔥 {currentStreak}</Text>
           </View>
         )}
 
@@ -320,6 +325,23 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     lineHeight: 28,
     textAlign: 'center',
+  },
+
+  streakHud: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255, 100, 0, 0.18)',
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.sm,
+    borderWidth: 1.5,
+    borderColor: '#FF6400',
+  },
+  streakHudText: {
+    color: '#FF9A3C',
+    fontWeight: typography.bold,
+    fontSize: typography.base,
+    letterSpacing: 0.5,
   },
 
   streakBadge: {
