@@ -1,0 +1,41 @@
+# Trivia Night — single-container: Node.js game server + React frontend
+#
+# server.js already serves static files from web/ via express.static.
+# No nginx or supervisord needed — everything runs through Node.
+#
+# WebSocket flows:
+#   wss://host/          → game WebSocket (wss, rooms, multiplayer)
+#   wss://host/ai-agent  → AI Quiz Master WebSocket
+# HTTP flows:
+#   /api/*               → Express routes (rooms, scores, TTS, health)
+#   /                    → React SPA (served by express.static from web/)
+
+# Stage 1: Build Expo web frontend → outputs to web/
+FROM node:20-alpine AS frontend
+WORKDIR /build
+COPY react-native/package*.json ./
+RUN npm install --legacy-peer-deps
+COPY react-native/ .
+RUN npx expo export --platform web --output-dir web
+
+# Stage 2: Production runtime
+FROM node:20-alpine
+WORKDIR /app
+
+# Install production deps only
+COPY package.json package-lock.json* ./
+RUN npm install --production --ignore-scripts
+
+# Server source
+COPY server.js .
+COPY src/ ./src/
+COPY public/ ./public/
+
+# React build (matches server.js webDir = path.join(__dirname, 'web'))
+COPY --from=frontend /build/web ./web
+
+EXPOSE 3000
+ENV PORT=3000 \
+    NODE_ENV=production
+
+CMD ["node", "server.js"]
