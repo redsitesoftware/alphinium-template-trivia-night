@@ -33,18 +33,13 @@ That's enough to get a working game. Add optional env vars below to unlock payme
 | Variable | Description |
 |----------|-------------|
 | `GROQ_API_KEY` | Groq API key for AI question generation. Get one free at [console.groq.com](https://console.groq.com). Without this the app falls back to a static question bank. |
+| `ELEVENLABS_API_KEY` | ElevenLabs API key for AI voice narration. Get one at [elevenlabs.io](https://elevenlabs.io). Without this, voice is disabled. |
 
 ### Optional — AI
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GROQ_MODEL` | `llama-3.1-8b-instant` | Groq model to use for question generation. |
-
-### Optional — Voice (TTS)
-
-| Variable | Description |
-|----------|-------------|
-| `ELEVENLABS_API_KEY` | ElevenLabs API key for AI voice narration. Without this, voice is disabled. Get one at [elevenlabs.io](https://elevenlabs.io). |
 
 ### Optional — Payments
 

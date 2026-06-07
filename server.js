@@ -16,7 +16,7 @@ const {
   ROUNDS_MIN, ROUNDS_MAX, QPR_MIN, QPR_MAX,
 } = require('./src/rooms');
 const { getTopScores, recordScore, getLoadedCount } = require('./src/scoreHistory');
-const { attachAiHost, generateGame, getScript, deleteScript, checkOllamaHealth, checkLLMHealth } = require('./src/aiHost');
+const { attachAiHost, generateGame, getScript, deleteScript, checkLLMHealth } = require('./src/aiHost');
 const { generateBanter } = require('./src/aiBanter');
 const { generateSpeech, hasKey: hasTtsKey, prewarmCache, getAudioCacheFile, getAudioCacheKey, VOICE_OPTIONS } = require('./src/tts');
 const { QUESTIONS } = require('./src/questions');

@@ -8,25 +8,17 @@
  *   - Client connects to /ai-agent WS to receive commentary events during gameplay
  *   - Zero AI latency during game — all lines pre-baked at start
  *
- * LLM provider priority:
- *   1. Groq  — if GROQ_API_KEY set: ~3-5s via LPU hardware (llama-3.1-8b-instant)
- *   2. Ollama — fallback: ~90s via dolphin-mistral on CPU
+ * LLM provider: Groq — ~3-5s via LPU hardware (llama-3.1-8b-instant)
  *
  * Environment:
- *   GROQ_API_KEY      — Groq API key. If set, Groq is used as primary provider.
- *   GROQ_MODEL        — Groq model.   Default: llama-3.1-8b-instant
- *   OLLAMA_URL        — Ollama base URL. Fallback when Groq unavailable. Default: '' (disabled)
- *   OLLAMA_MODEL      — Ollama model tag. Default: dolphin-mistral:latest
- *   OLLAMA_TIMEOUT_MS — Per-request timeout ms. Default: 120000
+ *   GROQ_API_KEY — Groq API key. Required for AI mode. Get one at console.groq.com
+ *   GROQ_MODEL   — Groq model. Default: llama-3.1-8b-instant
  */
 
 'use strict';
 
-const GROQ_API_KEY      =  process.env.GROQ_API_KEY || '';
-const GROQ_MODEL        =  process.env.GROQ_MODEL   || 'llama-3.1-8b-instant';
-const OLLAMA_URL        = (process.env.OLLAMA_URL   || '').replace(/\/$/, '');
-const OLLAMA_MODEL      =  process.env.OLLAMA_MODEL || 'dolphin-mistral:latest';
-const OLLAMA_TIMEOUT_MS = parseInt(process.env.OLLAMA_TIMEOUT_MS || '120000', 10);
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
+const GROQ_MODEL   = process.env.GROQ_MODEL   || 'llama-3.1-8b-instant';
 
 // Cached game scripts keyed by room code
 const gameScripts = new Map();
@@ -36,7 +28,7 @@ function setScript(roomCode, script) { gameScripts.set(roomCode, script); }
 function deleteScript(roomCode)      { gameScripts.delete(roomCode); }
 
 // ---------------------------------------------------------------------------
-// Canned fallback pools (used when Ollama unavailable or for edge cases)
+// Canned fallback pools (used when GROQ_API_KEY not set or Groq fails)
 // ---------------------------------------------------------------------------
 const CANNED = {
   intro:    ['🎙️ The Quiz Master is in the house! Let\'s see who the sharpest minds are tonight!'],
@@ -99,117 +91,13 @@ async function callGroq(prompt) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Ollama concurrency guard — bounded promise queue, max 3 concurrent/queued
-// ---------------------------------------------------------------------------
-const OLLAMA_QUEUE_MAX = 3;
-let _ollamaQueue = Promise.resolve();
-let _ollamaQueueDepth = 0;
 
-async function withOllamaLock(fn) {
-  if (_ollamaQueueDepth >= OLLAMA_QUEUE_MAX) {
-    console.warn(`[aiHost] Ollama queue full (depth=${_ollamaQueueDepth}) — dropping request`);
-    return null;
-  }
-  _ollamaQueueDepth++;
-  // Chain onto the shared queue so requests execute sequentially
-  const result = _ollamaQueue.then(() => fn()).finally(() => { _ollamaQueueDepth--; });
-  // Advance the queue pointer; swallow rejections so they don't block subsequent requests
-  _ollamaQueue = result.then(() => {}, () => {});
-  return result;
-}
-
-// ---------------------------------------------------------------------------
-// Ollama HTTP — streaming with early JSON completion detection
-// ---------------------------------------------------------------------------
-async function callOllama(prompt, timeoutMs = OLLAMA_TIMEOUT_MS, numPredict = 2500) {
-  if (!OLLAMA_URL) return null;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(`${OLLAMA_URL}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        prompt,
-        stream: true,
-        options: { num_predict: numPredict, temperature: 0.85, top_p: 0.9, repeat_penalty: 1.1 },
-      }),
-      signal: controller.signal,
-    });
-
-    // Stream tokens; stop early once the closing JSON bracket is received.
-    let text = '';
-    let bracketDepth = 0;
-    let inString = false;
-    let escape = false;
-    let jsonStarted = false;
-    let jsonComplete = false;
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    outer: while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      for (const line of decoder.decode(value).split('\n')) {
-        if (!line.trim()) continue;
-        let obj;
-        try { obj = JSON.parse(line); } catch { continue; }
-        const token = obj.response || '';
-        text += token;
-
-        // Track bracket depth to detect when the top-level JSON array/object closes.
-        // escape flag is always reset after the char following a backslash, regardless of context.
-        for (const ch of token) {
-          if (escape) { escape = false; continue; }
-          if (ch === '\\') { escape = true; continue; }  // handles \" inside strings correctly
-          if (ch === '"') { inString = !inString; continue; }
-          if (inString) continue;
-          if (ch === '[' || ch === '{') { bracketDepth++; jsonStarted = true; }
-          else if ((ch === ']' || ch === '}') && bracketDepth > 0) {
-            bracketDepth--;
-            if (jsonStarted && bracketDepth === 0) { jsonComplete = true; break; }
-          }
-        }
-
-        if (jsonComplete || obj.done) break outer;
-      }
-    }
-
-    clearTimeout(timer);
-    try { reader.cancel(); } catch {}
-    return text.trim() || null;
-  } catch (err) {
-    clearTimeout(timer);
-    console.warn('[aiHost] Ollama error:', err.name === 'AbortError' ? 'timeout' : err.message);
-    return null;
-  }
-}
-
-// Quick reachability check — resolves true/false within 5 seconds
-async function checkOllamaHealth() {
-  if (!OLLAMA_URL) return false;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 5000);
-  try {
-    const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: ctrl.signal });
-    clearTimeout(timer);
-    return res.ok;
-  } catch {
-    clearTimeout(timer);
-    return false;
-  }
-}
-
-// Health check for whichever provider is active
+// Health check — Groq is API-based, assume healthy if key is set; callGroq() handles failures
 async function checkLLMHealth() {
-  if (GROQ_API_KEY) return true; // Groq is API-based — assume healthy; callGroq() handles failures
-  return checkOllamaHealth();
+  return !!GROQ_API_KEY;
 }
 
-// exported in module.exports at bottom of file
+
 
 // ---------------------------------------------------------------------------
 // Game script generator — one big prompt, returns structured JSON
@@ -331,8 +219,8 @@ function parseGameScript(raw) {
 // Main export: generate full game (called server-side, not via WS)
 // ---------------------------------------------------------------------------
 async function generateGame(roomCode, players, numQuestions = 10, subject = null, difficulty = 'medium', questionsOnly = false, usedQuestions = []) {
-  if (!GROQ_API_KEY && !OLLAMA_URL) {
-    console.log('[aiHost] No LLM provider configured (set GROQ_API_KEY or OLLAMA_URL) — AI mode disabled');
+  if (!GROQ_API_KEY) {
+    console.log('[aiHost] No LLM provider configured (set GROQ_API_KEY) — AI mode disabled');
     return null;
   }
 
@@ -361,29 +249,15 @@ async function generateGame(roomCode, players, numQuestions = 10, subject = null
       ? buildQuestionsOnlyPrompt(needsGeneration, subject, difficulty, [...usedQuestions, ...cachedQuestions.map(q => q.question)])
       : buildGamePrompt(names, needsGeneration, subject, difficulty, [...usedQuestions, ...cachedQuestions.map(q => q.question)]);
 
-    const timeoutMs  = OLLAMA_TIMEOUT_MS;
-    const numPredict = 1500;
+    console.log(`[aiHost] 🚀 Using Groq (${GROQ_MODEL}) for room ${roomCode}`);
+    const raw = await callGroq(prompt);
 
-    // Try Groq first (3-5s), fall back to Ollama (~90s)
-    let raw;
-    if (GROQ_API_KEY) {
-      console.log(`[aiHost] 🚀 Using Groq (${GROQ_MODEL}) for room ${roomCode}`);
-      raw = await callGroq(prompt);
-      if (!raw) console.warn(`[aiHost] Groq failed for room ${roomCode} — falling back to Ollama`);
-    }
     if (!raw) {
-      if (!OLLAMA_URL) {
-        console.warn(`[aiHost] No fallback — OLLAMA_URL not set`);
-        // If we have cached questions, use them even if AI fails
-        if (cachedQuestions.length > 0) {
-          console.log(`[aiHost] Using ${cachedQuestions.length} cached questions only (AI unavailable)`);
-          aiQuestions = [];
-        } else {
-          return null;
-        }
+      if (cachedQuestions.length > 0) {
+        console.log(`[aiHost] Groq failed — using ${cachedQuestions.length} cached questions only`);
+        aiQuestions = [];
       } else {
-        console.log(`[aiHost] 🐢 Using Ollama (${OLLAMA_MODEL}) for room ${roomCode}`);
-        raw = await withOllamaLock(() => callOllama(prompt, timeoutMs, numPredict));
+        return null;
       }
     }
 
@@ -462,7 +336,7 @@ function safeSend(ws, obj) {
 // WebSocket handler — fired during gameplay for commentary events
 // ---------------------------------------------------------------------------
 function attachAiHost(wss) {
-  const provider = GROQ_API_KEY ? `Groq (${GROQ_MODEL})` : (OLLAMA_URL ? `Ollama (${OLLAMA_MODEL})` : 'DISABLED');
+  const provider = GROQ_API_KEY ? `Groq (${GROQ_MODEL})` : 'DISABLED';
   console.log(`[aiHost] WS handler ready — provider: ${provider}`);
 
   wss.on('connection', (ws, req) => {
@@ -535,4 +409,4 @@ function attachAiHost(wss) {
   });
 }
 
-module.exports = { attachAiHost, generateGame, getScript, setScript, deleteScript, checkOllamaHealth, checkLLMHealth };
+module.exports = { attachAiHost, generateGame, getScript, setScript, deleteScript, checkLLMHealth };
