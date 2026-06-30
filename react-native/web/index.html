@@ -1,1 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Trivia Night — AI-Powered Multiplayer Quiz</title>
 
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://trivia.user-pods.alphinium.io/" />
+    <meta property="og:title"       content="Trivia Night 🎮 — AI-Powered Multiplayer Quiz" />
+    <meta property="og:description" content="Host a live multiplayer trivia game with friends. AI generates custom questions on any topic. Free to play!" />
+    <meta property="og:image"       content="https://trivia.user-pods.alphinium.io/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Trivia Night 🎮 — AI-Powered Multiplayer Quiz" />
+    <meta name="twitter:description" content="Host a live multiplayer trivia game with friends. AI generates custom questions on any topic. Free to play!" />
+    <meta name="twitter:image"       content="https://trivia.user-pods.alphinium.io/og-image.png" />
+
+    <!-- General SEO -->
+    <meta name="description" content="Host a live multiplayer trivia game with friends. AI generates custom questions on any topic. Free to play!" />
+    <meta name="theme-color" content="#0a0a1e" />
+    <!-- Facebook JS SDK -->
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({ appId: '1278485494007756', cookie: true, xfbml: true, version: 'v25.0' });
+      };
+      (function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(d.getElementById(id))return;js=d.createElement(s);js.id=id;js.src="https://connect.facebook.net/en_US/sdk.js";fjs.parentNode.insertBefore(js,fjs);}(document,'script','facebook-jssdk'));
+    </script>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <!-- Google Analytics (default: Alphinium Marketplace — override via EXPO_PUBLIC_GA_ID) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=%EXPO_PUBLIC_GA_ID%"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag("config", "%EXPO_PUBLIC_GA_ID%");
+    </script>
+  </head>
+
+  <body>
+    <!-- Force cache bust: reload if version param missing -->
+    <script>
+      (function() {
+        const BUILD_VERSION = '1.1.0';  // Bump this to force reload
+        const params = new URLSearchParams(window.location.search);
+        if (!params.has('v') || params.get('v') !== BUILD_VERSION) {
+          const newUrl = window.location.pathname + '?v=' + BUILD_VERSION + window.location.hash;
+          window.location.replace(newUrl);
+        }
+      })();
+    </script>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  <script src="/_expo/static/js/web/index-0edc6ca1f684340c31a19f6fba524843.js" defer></script>
+</body>
+</html>
